@@ -8,17 +8,15 @@ app.use(express.json());
 
 const PORT = process.env.PORT || 3000;
 
-/* ===== CONFIG ===== */
 const INVITES = [
   "https://h5.smartwallet-pay.com?invite=V2JNGPTA",
-  "https://h5.smartwallet-pay.com?invite=OGAS2GUW",
-  "https://h5.smartwallet-pay.com?invite=WRNNKJTT"
+  "https://h5.smartwallet-pay.com?invite=WRNNKJTT",
+  "https://h5.smartwallet-pay.com?invite=OGAS2GUW"
 ];
 
-const BATCH_SIZE = 10;   // users per link
 const STATE_FILE = "./state.json";
 
-/* ===== HELPERS ===== */
+/* ---------- helpers ---------- */
 function readState() {
   return JSON.parse(fs.readFileSync(STATE_FILE, "utf8"));
 }
@@ -27,42 +25,20 @@ function writeState(state) {
   fs.writeFileSync(STATE_FILE, JSON.stringify(state));
 }
 
-/* ===== MAIN ROUTE ===== */
+/* ---------- ROUTE ---------- */
 app.post("/get-invite", (req, res) => {
   let state = readState();
 
-  const total = state.total || 0;
+  const invite = INVITES[state.index];
 
-  // 🔢 batch-based rotation
-  const batchIndex = Math.floor(total / BATCH_SIZE);
-  const linkIndex = batchIndex % INVITES.length;
-
-  const invite = INVITES[linkIndex];
-
-  // increment global count
-  state.total = total + 1;
+  // rotate
+  state.index = (state.index + 1) % INVITES.length;
   writeState(state);
 
-  res.json({
-    invite,
-    total: state.total,
-    batch: batchIndex + 1,
-    link: linkIndex + 1
-  });
+  res.json({ invite });
 });
 
-/* ===== STATUS (OPTIONAL) ===== */
-app.get("/status", (req, res) => {
-  const state = readState();
-  const batchIndex = Math.floor((state.total || 0) / BATCH_SIZE);
-  res.json({
-    totalRegistrations: state.total || 0,
-    currentBatch: batchIndex + 1,
-    currentLink: (batchIndex % INVITES.length) + 1
-  });
-});
-
-/* ===== HEALTH CHECK ===== */
+/* ---------- HEALTH CHECK ---------- */
 app.get("/", (req, res) => {
   res.send("Invite Rotator Running");
 });
