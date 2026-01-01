@@ -8,16 +8,24 @@ app.use(express.json());
 
 const PORT = process.env.PORT || 3000;
 
+/* 🔗 INVITE LINKS */
 const INVITES = [
-  "https://h5.smartwallet-pay.com?invite=V2JNGPTA",
-  "https://h5.smartwallet-pay.com?invite=OGAS2GUW",
-  "https://h5.smartwallet-pay.com?invite=WRNNKJTT"
+  "https://h5.smartwallet-pay.com/invite=V2JNGPTA",
+  "https://h5.smartwallet-pay.com/invite=0GAS2GUW",
+  "https://h5.smartwallet-pay.com/invite=WRNNKJTT"
 ];
 
+/* 👥 USERS PER LINK */
+const LIMIT_PER_LINK = 2;
+
+/* 📦 STATE FILE */
 const STATE_FILE = "./state.json";
 
-/* ---------- helpers ---------- */
+/* 🧠 HELPERS */
 function readState() {
+  if (!fs.existsSync(STATE_FILE)) {
+    return { index: 0, count: 0 };
+  }
   return JSON.parse(fs.readFileSync(STATE_FILE, "utf8"));
 }
 
@@ -25,20 +33,27 @@ function writeState(state) {
   fs.writeFileSync(STATE_FILE, JSON.stringify(state));
 }
 
-/* ---------- ROUTE ---------- */
+/* 🔁 ROTATION ROUTE */
 app.post("/get-invite", (req, res) => {
   let state = readState();
 
   const invite = INVITES[state.index];
 
-  // rotate
-  state.index = (state.index + 1) % INVITES.length;
+  // increase usage count
+  state.count++;
+
+  // if limit reached → move to next link
+  if (state.count >= LIMIT_PER_LINK) {
+    state.count = 0;
+    state.index = (state.index + 1) % INVITES.length;
+  }
+
   writeState(state);
 
   res.json({ invite });
 });
 
-/* ---------- HEALTH CHECK ---------- */
+/* ❤️ HEALTH CHECK */
 app.get("/", (req, res) => {
   res.send("Invite Rotator Running");
 });
