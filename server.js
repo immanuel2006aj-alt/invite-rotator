@@ -10,8 +10,8 @@ const PORT = process.env.PORT || 3000;
 
 const INVITES = [
   "https://h5.smartwallet-pay.com?invite=V2JNGPTA",
-  "https://h5.smartwallet-pay.com?invite=V2JNGPTA",
-  "https://h5.smartwallet-pay.com?invite=V2JNGPTA"
+  "https://h5.smartwallet-pay.com?invite=OGAS2GUW",
+  "https://h5.smartwallet-pay.com?invite=WRNNKJTT"
 ];
 
 const STATE_FILE = "./state.json";
